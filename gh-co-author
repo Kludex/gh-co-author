@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# This is stolen from Hynek Schlawack's article:
+# https://hynek.me/til/easier-crediting-contributors-github/
+#
+# All credits to Hynek Schlawack.
+
+set -e
+
+help() {
+    echo "Usage: gh co-author AUTHOR" >&2
+    echo
+    echo "Generate \`Co-authored-by\` trailer for commit messages."
+    echo
+    echo "Arguments:"
+    echo "  AUTHOR [required]   GitHub username of the author."
+    echo
+    echo "Commands:"
+    echo "  help                Show this help message."
+}
+
+co_author() {
+    account=$1
+    data=$(curl -s https://api.github.com/users/$account)
+    id=$(echo $data | jq .id)
+    name=$(echo $data | jq --raw-output '.name // .login')
+
+    printf "Co-authored-by: %s <%d+%s@users.noreply.github.com>\n" "$name" $id $account
+}
+
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+    -h | --help)
+        help
+        exit 1
+        ;;
+    *)
+        co_author $1
+        exit 0
+        ;;
+    esac
+done
+
+help
+exit 1
